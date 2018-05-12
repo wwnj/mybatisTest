@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wwnj.dao.EmployeeMapper">
+    <cache type="org.mybatis.caches.ehcache.EhcacheCache"></cache>
+
+    <!--public List<Employee> selectByDid(Integer did);-->
+    <select id="selectByDid" resultType="com.wwnj.pojo.Employee">
+        <!--select id,last_name lastName,email,gender from employee where id = #{id}-->
+        select * from employee where did = #{did}
+    </select>
+
+    <select id="selectById" resultType="com.wwnj.pojo.Employee" useCache="true" flushCache="false">
+        <!--select id,last_name lastName,email,gender from employee where id = #{id}-->
+        select * from employee where id = #{id}
+    </select>
+
+    <insert id="insertByEmp" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO employee(last_name,email,gender) VALUES (#{lastName},#{email},#{gender})
+    </insert>
+
+    <update id="updateByEmp">
+        UPDATE employee SET last_name=#{lastName},email=#{email},gender=#{gender} where id=#{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM employee where id=#{id}
+    </delete>
+
+    <select id="selectByLaseNameAndGender" resultType="com.wwnj.pojo.Employee">
+        select * from employee where last_name=#{lastName} and gender=#{gender}
+    </select>
+
+    <select id="selectByMap" resultType="com.wwnj.pojo.Employee">
+        select * from employee where last_name=#{lastName} and gender=#{gender}
+    </select>
+
+    <!--public List<Employee> selectByLike(String lastName);-->
+    <select id="selectByLike" resultType="com.wwnj.pojo.Employee">
+        SELECT * from employee where last_name LIKE #{lastName}
+    </select>
+
+    <!--public Map<Integer,Employee> selectByLikeReturnMap(String lastName);-->
+    <select id="selectByLikeReturnMap" resultType="com.wwnj.pojo.Employee">
+        SELECT * from employee where last_name LIKE #{lastName}
+    </select>
+</mapper>

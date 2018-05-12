@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wwnj.dao.EmployeeMapperPlus">
+    <!--public Employee selectByIdReturnWithDept(Integer id);-->
+    <resultMap id="MyEmp" type="com.wwnj.pojo.Employee">
+        <id column="id" property="id"/>
+        <result column="last_name" property="lastName"/>
+        <result column="email" property="email"/>
+        <result column="gender" property="gender"/>
+        <association property="department" javaType="com.wwnj.pojo.Department">
+            <id column="did" property="id"/>
+            <result column="dept_name" property="deptName"/>
+        </association>
+    </resultMap>
+    <select id="selectByIdReturnWithDept" resultMap="MyEmp">
+        select e.id id,e.last_name last_name,e.email email,e.gender gender,
+               d.id did,d.dept_name dept_name
+        from employee e,tbl_department d where e.did=d.id and e.id=#{id}
+    </select>
+
+    <!--public Employee selectByIdReturnByStep(Integer id);-->
+    <resultMap id="MyEmpByStep" type="com.wwnj.pojo.Employee">
+        <id column="id" property="id"/>
+        <result column="last_name" property="lastName"/>
+        <result column="email" property="email"/>
+        <result column="gender" property="gender"/>
+        <association property="department" column="did" javaType="com.wwnj.pojo.Department"
+                     select="com.wwnj.dao.DepartmentMapper.selectById">
+        </association>
+    </resultMap>
+    <select id="selectByIdReturnByStep" resultMap="MyEmpByStep">
+        select * from employee where id=#{id}
+    </select>
+
+    <!--public Employee selectByIdReturnByStepAndDiscriminator(Integer id);-->
+    <resultMap id="MyEmpByStepAndDiscriminator" type="com.wwnj.pojo.Employee">
+        <id column="id" property="id"/>
+        <result column="last_name" property="lastName"/>
+        <result column="email" property="email"/>
+        <result column="gender" property="gender"/>
+        <discriminator javaType="string" column="gender">
+            <!--女生-->
+            <case value="0" resultType="com.wwnj.pojo.Employee">
+                <association property="department" column="did" javaType="com.wwnj.pojo.Department"
+                             select="com.wwnj.dao.DepartmentMapper.selectById">
+                </association>
+            </case>
+            <!--男生-->
+            <case value="1" resultType="com.wwnj.pojo.Employee">
+                <result column="last_name" property="email"/>
+            </case>
+        </discriminator>
+    </resultMap>
+    <select id="selectByIdReturnByStepAndDiscriminator" resultMap="MyEmpByStepAndDiscriminator">
+        select * from employee where id=#{id}
+    </select>
+</mapper>

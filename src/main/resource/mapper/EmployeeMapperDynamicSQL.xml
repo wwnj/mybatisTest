@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wwnj.dao.EmployeeMapperDynamicSQL">
+    <!--
+    • if: 判断
+    • choose (when, otherwise): 分支选择,只会进入其中一个；类似带了break的swith-case
+    • trim (where 封装查询条件, set 封装修改条件) 字符串截取
+    • foreach-->
+    <!--public List<Employee> getEmpsByConditionIf(Employee employee);-->
+    <select id="getEmpsByConditionIf" resultType="com.wwnj.pojo.Employee">
+        SELECT * FROM employee
+        <where>
+            <if test="id!=null">
+                id=#{id}
+            </if>
+            <if test="lastName!=null and last_name!=''">
+                AND last_name LIKE #{lastName}
+            </if>
+            <if test="email!=null  &amp;&amp;  email.trim()!=&quot;&quot;">
+                AND email=#{email}
+            </if>
+            <if test="gender==0 or gender==1">
+                AND gender=#{gender}
+            </if>
+        </where>
+    </select>
+
+    <!--public List<Employee> getEmpsByConditionTrim(Employee employee);-->
+    <select id="getEmpsByConditionTrim" resultType="com.wwnj.pojo.Employee">
+        SELECT * FROM employee
+        <trim prefix="where" suffixOverrides="and">
+            <if test="id!=null">
+                id=#{id} AND
+            </if>
+            <if test="lastName!=null and last_name!=''">
+                last_name LIKE #{lastName} AND
+            </if>
+            <if test="email!=null  &amp;&amp;  email.trim()!=&quot;&quot;">
+                email=#{email} AND
+            </if>
+            <if test="gender==0 or gender==1">
+                gender=#{gender}
+            </if>
+        </trim>
+    </select>
+
+    <!--public List<Employee> getEmpsByConditionChoose(Employee employee);-->
+    <select id="getEmpsByConditionChoose" resultType="com.wwnj.pojo.Employee">
+        SELECT * FROM employee
+        <where>
+            <choose>
+                <when test="id!=null">
+                    id=#{id}
+                </when>
+                <when test="lastName!=null and last_name!=''">
+                    last_name LIKE #{lastName}
+                </when>
+                <when test="email!=null  &amp;&amp;  email.trim()!=&quot;&quot;">
+                    email=#{email}
+                </when>
+                <when test="gender==0 or gender==1">
+                    gender=#{gender}
+                </when>
+                <otherwise>
+                    1=1
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+    
+    <!--public void updateEmp(Employee employee);-->
+    <update id="updateEmp">
+        update employee
+        <set>
+            <if test="lastName!=null and lastName!=''">
+                last_name=#{lastName},
+            </if>
+            <if test="email!=null and email.trim()!=''">
+                email=#{email},
+            </if>
+            <if test="gender==0 or gender==1">
+                gender=#{gender}
+            </if>
+        </set>
+        <where>
+            id=#{id}
+        </where>
+    </update>
+
+    <!--public List<Employee> getEmpsByConditionForeach(List<Integer> ids);-->
+    <select id="getEmpsByConditionForeach" resultType="com.wwnj.pojo.Employee">
+        <!--SELECT * FROM employee where id in(1,2,3)-->
+        SELECT * FROM employee
+        <where>
+            <!--
+                collection:指定要遍历的集合, 可选参数为collection,list
+                           list类型的参数会特殊处理封装在map中，map的key就叫list
+                item:将当前遍历出的元素赋值给指定的变量
+                separator:每个元素之间的分隔符
+                open:遍历出所有结果拼接一个开始的字符
+                close:遍历出所有结果拼接一个结束的字符
+                index:索引。遍历list的时候index就是索引，item就是值
+                           遍历map的时候index就是key，item就是value
+            -->
+            <foreach collection="list" item="item_id" separator=","
+                        open="id in(" close=")">
+                #{item_id}
+            </foreach>
+        </where>
+    </select>
+
+    <!--public void addEmps(@Param("employees") List<Employee> employees);-->
+    <insert id="addEmps">
+        INSERT INTO employee(
+        <include refid="insertColumn"/>
+        ) VALUES
+        <foreach collection="employees" separator="," item="emp">
+            (#{emp.lastName},#{emp.email},#{emp.gender},#{emp.department.id})
+        </foreach>
+    </insert>
+
+    <!-- 两个内置参数
+        不只是方法传递过来的参数可以被用来判断，取值
+        mybatis默认还有两个内置参数
+        _parameter: 代表整个参数
+            单个参数: _parameter就是这个参数
+            多个参数: 参数会被封装为一个map;_parameter就是代表这个map
+
+        _databaseId:如果配置了databaseIdProvider标签
+                _databaseId就是代表当前数据库的别名,如oracle/mysql
+     -->
+    <!--public void getEmpsInnerParameterAndBind(Employee employee);-->
+    <select id="getEmpsInnerParameterAndBind" resultType="com.wwnj.pojo.Employee">
+        SELECT * FROM employee
+        <if test="_parameter!=null">
+            <where>
+                <!-- bind: 可以将OGNL表达式的值绑定到一个变量中，方便后来引用这个变量的值 -->
+                <bind name="_lastName" value="'_'+lastName+'%'"/>
+                last_name LIKE #{_lastName}
+            </where>
+        </if>
+    </select>
+
+    <!--抽取可重用的sql片段，方便后面引用
+        1.sql抽取：经常将要查询的列名，或者插入用的列名抽取出来方便引用
+        2.include引用已经抽取的sql
+        3.include还可以自定义一些property，sql标签内部就能使用自定义的属性
+            include-property: 取值的正确方式${prop}，不能使用#{prop}
+    -->
+    <sql id="insertColumn">
+        last_name,email,gender,did
+    </sql>
+</mapper>
